@@ -16,75 +16,67 @@ export default function App() {
   const [members, setMembers] = useState([]);
   const [loans, setLoans] = useState([]);
 
-  const loadBooks = async (page) => {
-        try {
-            const criteria = {};
-            // On récupère une large première page pour avoir le choix
-            const response = await bookService.getBookPaged(criteria);
-            const data = response.result;
-            console.log(data);
-            setBooks(data || []);
-            //setTotal(data.total || 0);
-            //setTotalPages(data.totalPages || 0);
-            //setSelectedIds([]);
-        } catch (err) {
-            console.error("Impossible de charger les investissements", err);
-        }
-    };
-    
-  const loadMembers = async (page) => {
-        try {
-            const criteria = {};
-            // On récupère une large première page pour avoir le choix
-            const response = await memberService.getMemberPaged(criteria);
-            const data = response.result;
-            setMembers(data || []);
-            //setTotal(data.total || 0);
-            //setTotalPages(data.totalPages || 0);
-            //setSelectedIds([]);
-        } catch (err) {
-            console.error("Impossible de charger les investissements", err);
-        }
-    };
+  const fetchData = async (serviceMethod,criteria, stateSetter, errorLabel) => {
+    try {
+      const response = await serviceMethod(criteria);
+      stateSetter(response.result || []);
+    } catch (err) {
+      console.error(`Impossible de charger les ${errorLabel}`, err);
+    }
+  };
 
-  const loadBorrows = async (page) => {
-        try {
-            const criteria = {};
-            // On récupère une large première page pour avoir le choix
-            const response = await borrowService.getBorrowPaged(criteria);
-            const data = response.result;
-            setLoans(data || []);
-            //setTotal(data.total || 0);
-            //setTotalPages(data.totalPages || 0);
-            //setSelectedIds([]);
-        } catch (err) {
-            console.error("Impossible de charger les emprunts", err);
-        }
-    };
+  const postData = async (serviceMethod,data,errorLabel) => {
+    try{
+        const response = await serviceMethod(data);
 
-    useEffect(() => {
-      loadMembers(0);
-    })
-
-    useEffect(() => {
-        loadBooks(0);
-    }, []);
+    }
+    catch(err){
+       console.error(`Impossible de charger les ${errorLabel}`, err);
+    }
+  }
 
 
-    useEffect(() => {
-        loadBorrows(0);
-    }, []);
+  const loadBooks = () => 
+    {
+      const criteria = {};
+      fetchData(bookService.getBookPaged,criteria, setBooks, "livres");
+    }
+  const loadMembers = () =>
+    {
+     const criteria = {};     
+     fetchData(memberService.getMemberPaged,criteria, setMembers, "membres");
+     }
+  const loadBorrows = () =>
+    {
+      const criteria = {};
+      fetchData(borrowService.getBorrowPaged,criteria, setLoans, "emprunts");
+    } 
 
+  
+
+  useEffect(() => {
+    loadMembers();
+    loadBooks();
+    loadBorrows();
+  }, []);
+
+  
 
   // Fonctions d'outils pour ajouter des données
-  const addBook = (newBook) => setBooks([...books, { ...newBook, id: 'B' + (books.length + 1), available: true }]);
-  const addMember = (newMember) => setMembers([...members, { ...newMember, id: 'M' + (members.length + 1) }]);
+  const addBook = (newBook) => 
+    {
+      postData(bookService.createBook,newBook,"livres");   
+      loadBooks();
+    }
+  
+  const addMember = (newMember) => {
+      postData(memberService.createMember,newMember,"membres");   
+      loadMembers();
+  }
   
   const addLoan = (newLoan) => {
-    // Mettre à jour le statut du livre (indisponible)
-    setBooks(books.map(b => b.bookId === newLoan.bookId ? { ...b, available: false } : b));
-    // Ajouter l'emprunt
-    setLoans([...loans, { ...newLoan, id: 'L' + (loans.length + 1), active: true }]);
+      postData(borrowService.createBorrow,newLoan,"emprunts");   
+      loadBorrows();
   };
 
   const returnBook = (loanId, bookId) => {

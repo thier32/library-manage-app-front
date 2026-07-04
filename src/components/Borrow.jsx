@@ -5,11 +5,10 @@ import { styles } from './Style';
 // 4. COMPOSANT : GESTION DES EMPRUNTS
 // ==========================================
 export default function BorrowView({ loans, books, members, onAddLoan, onReturnBook }) {
-  const [memberId, setMemberId] = useState('');
-  const [bookId, setBookId] = useState('');
+  const [memberId, setMemberId] = useState(0);
+  const [bookId, setBookId] = useState(0);
   const [returnDate, setReturnDate] = useState('');
 
-  console.log(loans);
   // Filtrer uniquement les livres disponibles pour le formulaire de prêt
   //const availableBooks = books.filter(b => b.available);
   const availableBooks = books;
@@ -19,7 +18,12 @@ export default function BorrowView({ loans, books, members, onAddLoan, onReturnB
     if (!memberId || !bookId || !returnDate) return alert('Veuillez remplir tous les champs');
     
     const loanDate = new Date().toISOString().split('T')[0]; // Date du jour YYYY-MM-DD
-    onAddLoan({ memberId, bookId, loanDate, returnDate });
+    onAddLoan({
+        memberId: parseInt(memberId), 
+        bookId: parseInt(bookId), 
+        loanDate: loanDate, 
+        returnDate: returnDate 
+    });
     
     setMemberId(''); setBookId(''); setReturnDate('');
   };
@@ -62,8 +66,8 @@ export default function BorrowView({ loans, books, members, onAddLoan, onReturnB
           {loans.map(l => (
             <tr key={l.borrowId}>
               <td>{l.borrowId}</td>
-              <td>{getMemberName(l.memberId)}</td>
-              <td>{getBookTitle(l.bookId)}</td>
+              <td>{l.memberName}</td>
+              <td>{l.bookTitle}</td>
               <td>{l.loanDate}</td>
               <td>{l.returnDueDate}</td>
               <td>
